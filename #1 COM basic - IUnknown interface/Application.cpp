@@ -1,10 +1,5 @@
 #include "Precompiled.h"
 #include <windows.h>
-#include <wrl.h>
-
-// using ComPtr to managed the inferface reference
-
-using namespace Microsoft::WRL;
 
 struct __declspec(uuid("2d41a5cf-e276-48d2-933f-063dba343322")) __declspec(novtable)
 IApplication : IUnknown
@@ -15,6 +10,8 @@ IApplication : IUnknown
 class Application : public IApplication
 {
 	long m_references = 1;
+	
+	wchar_t* m_applicationName;
 	
 public:
 
@@ -37,15 +34,11 @@ public:
 	// IUnknown interface implementation
     unsigned long __stdcall AddRef() noexcept
     {
-		Trace(L"Reference + 1\n");
-		
         return InterlockedIncrement(&m_references);
     }
 
     unsigned long __stdcall Release() noexcept
     {
-		Trace(L"Reference - 1\n");
-		
         unsigned long const count = InterlockedDecrement(&m_references);
 
         if (0 == count)
@@ -76,7 +69,6 @@ public:
     }
 };
 
-
 HRESULT CreateObject(GUID const & id, void ** obj) noexcept
 {
 	   if (id == __uuidof(IApplication))
@@ -95,11 +87,13 @@ HRESULT CreateObject(GUID const & id, void ** obj) noexcept
 
 int main()
 {
-	ComPtr<IApplication> app;
+	IApplication* app;
 	
-	CreateObject(__uuidof(IApplication), (void**)app.GetAddressOf());
+	CreateObject(__uuidof(IApplication), (void**)&app);
 	
 	app->Start();
 	
-	ComPtr<IApplication> app2  = app;
+	IApplication* app2 = app;
+	
+	app->Release();
 }

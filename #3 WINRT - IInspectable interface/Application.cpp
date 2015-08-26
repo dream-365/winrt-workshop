@@ -1,8 +1,11 @@
 #include "Precompiled.h"
 #include <windows.h>
+#include <wrl.h>
+
+using namespace Microsoft::WRL;
 
 struct __declspec(uuid("2d41a5cf-e276-48d2-933f-063dba343322")) __declspec(novtable)
-IApplication : IUnknown
+IApplication : IInspectable
 {
     virtual HRESULT __stdcall Start() = 0;
 };
@@ -29,14 +32,43 @@ public:
         return S_OK;
     }
 	
+	// IInspectable interface implementation
+	HRESULT GetIids(ULONG *iidCount,
+					IID ** iids ) noexcept {
+		*iidCount = 0;
+		
+		*iids = static_cast<GUID *>(CoTaskMemAlloc(sizeof(GUID) * 1));
+		
+		(*iids)[0] = __uuidof(IApplication); 
+		
+		*iidCount = 1;
+						
+		return S_OK;
+	}
+	
+	HRESULT GetRuntimeClassName(HSTRING *className) noexcept {
+		return E_NOTIMPL;
+	}
+	
+	HRESULT GetTrustLevel(TrustLevel *trustLevel) noexcept {
+		
+		*trustLevel = BaseTrust;
+		
+		return S_OK;
+	}
+
 	// IUnknown interface implementation
     unsigned long __stdcall AddRef() noexcept
     {
+		Trace(L"Reference + 1\n");
+		
         return InterlockedIncrement(&m_references);
     }
 
     unsigned long __stdcall Release() noexcept
     {
+		Trace(L"Reference - 1\n");
+		
         unsigned long const count = InterlockedDecrement(&m_references);
 
         if (0 == count)
@@ -51,6 +83,7 @@ public:
                                      void ** object) noexcept
     {
         if (id == __uuidof(IApplication) ||
+		    id == __uuidof(IInspectable) ||
             id == __uuidof(IUnknown))
         {
             *object = static_cast<IApplication *>(this);
@@ -66,6 +99,8 @@ public:
         return S_OK;
     }
 };
+
+
 
 
 HRESULT CreateObject(GUID const & id, void ** obj) noexcept
@@ -86,11 +121,17 @@ HRESULT CreateObject(GUID const & id, void ** obj) noexcept
 
 int main()
 {
-	IApplication* app;
+	ComPtr<IApplication> app;
 	
-	CreateObject(__uuidof(IApplication), (void**)&app);
+	CreateObject(__uuidof(IApplication), (void**)app.GetAddressOf());
 	
-	app->Start();
+	ComPtr<IInspectable> obj;
 	
-	app->Release();
+	app->QueryInterface(__uuidof(IInspectable), (void**)obj.GetAddressOf());
+	
+	ULONG idCount;
+	
+	IID* iids; 
+	
+	obj->GetIids(&idCount, &iids);
 }
