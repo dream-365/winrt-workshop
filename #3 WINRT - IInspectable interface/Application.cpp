@@ -1,6 +1,12 @@
 #include "Precompiled.h"
 #include <windows.h>
+#include <winstring.h>
 #include <wrl.h>
+#include <iostream>
+#include <string>
+using namespace std;
+
+#pragma comment(lib, "runtimeobject")
 
 using namespace Microsoft::WRL;
 
@@ -47,6 +53,11 @@ public:
 	}
 	
 	HRESULT GetRuntimeClassName(HSTRING *className) noexcept {
+		
+		LPCWSTR text = L"Application.Name";
+				
+		WindowsCreateString(text, lstrlen(text), className);
+		
 		return E_NOTIMPL;
 	}
 	
@@ -100,9 +111,6 @@ public:
     }
 };
 
-
-
-
 HRESULT CreateObject(GUID const & id, void ** obj) noexcept
 {
 	   if (id == __uuidof(IApplication))
@@ -133,5 +141,18 @@ int main()
 	
 	IID* iids; 
 	
+	HSTRING className;
+	
 	obj->GetIids(&idCount, &iids);
+	
+	obj->GetRuntimeClassName(&className);
+	
+	cout << "id count: " << idCount << endl;
+	
+	UINT32 strlen;
+	
+	PCWSTR text = WindowsGetStringRawBuffer(className, &strlen);
+	
+	wcout << "string length: " << strlen << endl;
+	wcout << "class name: " << text << endl;
 }
