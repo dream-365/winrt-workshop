@@ -1,0 +1,18 @@
+import "inspectable.idl";
+
+namespace Component
+{
+	[version(1.0)]
+[uuid(2c12a534-1e3d-42f4-89e8-b6166553e85d)]
+interface IApplication : IInspectable
+{
+	HRESULT Start();
+}
+
+[version(1.0)]
+[activatable(1.0)]
+runtimeclass Application
+{
+	[default] interface IApplication;
+}
+}
