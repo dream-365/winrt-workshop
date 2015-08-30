@@ -9,8 +9,16 @@
 
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 // Windows Header Files:
-#include <windows.h>
+#include <wrl.h>
+#include <winstring.h>
+#include <stdio.h>
 
+template <typename ... Args>
+void Trace(wchar_t const * format, Args ... args)
+{
+	wchar_t buffer[200];
 
+	swprintf_s(buffer, format, args ...);
 
-// TODO: reference additional headers your program requires here
+	OutputDebugString(buffer);
+}
